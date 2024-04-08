@@ -1,0 +1,22 @@
+[
+  {
+    "id": "1",
+    "artist": "",
+    "artist_id": "55GUoQ2E2hze3842bFs4bb",
+    "likes": 21,
+    "moods": [
+      {
+        "mood_1": "happy",
+        "mood_2": "excited"
+      }
+    ],
+    "comments": [
+      {
+        "name": "Andrew Salmon",
+        "comment": "This is amazing!! What a band!",
+        "timestamp": 1711330515659,
+        "id": "jifodjfs0f88332j"
+      }
+    ]
+  }
+]
