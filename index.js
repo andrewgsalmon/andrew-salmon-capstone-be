@@ -1,7 +1,7 @@
 const express = require("express");
 const app = express();
-const recosRoutes = require("./routes/recos");
-const tokenRoutes = require("./routes/spotifyToken.js")
+// const recosRoutes = require("./routes/recos");
+// const tokenRoutes = require("./routes/spotifyToken.js")
 const userRoutes = require('./routes/userRoutes');
 const cors = require("cors");
 require("dotenv").config();
@@ -15,7 +15,7 @@ const SpotifyStrategy = require('passport-spotify').Strategy;
 const cookieSession = require('cookie-session')
 const { CORS_ORIGIN } = process.env;
 
-app.use(cors({ origin: CORS_ORIGIN }));
+app.use(cors());
 
 app.use(express.json());
 
@@ -60,10 +60,10 @@ app.get('/', (req, res) => {
   res.send('Welcome to my API');
 });
 
-app.use('/users', userRoutes);
+app.use('/api/users', userRoutes);
 
-app.use("/recos", recosRoutes);
+// app.use("/api/recos", recosRoutes);
 
-app.use("/token", tokenRoutes);
+// app.use("/token", tokenRoutes);
 
 app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
