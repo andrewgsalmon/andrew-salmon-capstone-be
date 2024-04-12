@@ -6,7 +6,6 @@ const authorize = require('../middleware/authorize');
 
 // ## POST /api/users/register
 // - Creates a new user.
-// - Expected body: { first_name, last_name, phone, address, email, password }
 router.post("/register", async (req, res) => {
   const { name, email, fav_artists, location, password } = req.body;
 
@@ -23,7 +22,7 @@ const hashedPassword = bcrypt.hashSync(password)
       fav_artists,
       location,
       email,
-      password: hashedPassword, //update password to use hashed password
+      password: hashedPassword //update password to use hashed password
   };
 
   // Insert it into our database
@@ -75,37 +74,37 @@ const token = jwt.sign(
 // -   Gets information about the currently logged in user.
 // -   If no valid JWT is provided, this route will respond with 401 Unauthorized.
 // -   Expected headers: { Authorization: "Bearer JWT_TOKEN_HERE" }
-// router.get("/current", async (req, res) => {
-//     // If there is no auth header provided
-//     if (!req.headers.authorization) {
-//         return res.status(401).send("Please login");
-//     }
-// 	// console.log(req.headers.authorization);
-//     // Parse the bearer token
+router.get("/current", async (req, res) => {
+    // If there is no auth header provided
+    if (!req.headers.authorization) {
+        return res.status(401).send("Please login");
+    }
+	// console.log(req.headers.authorization);
+    // Parse the bearer token
 
-// 	const authHeader = req.headers.authorization;
-// 	const authToken = authHeader.split(' ')[1];
+	const authHeader = req.headers.authorization;
+	const authToken = authHeader.split(' ')[1];
 
-// 	console.log(authToken);
-// 	// create a variable that stores the authorization token
-// 	// Create a variable to split the auth header and store the second item in the arra
-//     // Verify the token
-//     try {
-// 		// Use jwt.verify to verify the token as compared to your JWT_KEY inside of the .env
-//         const decoded = jwt.verify(authToken, process.env.JWT_KEY);
-//         console.log(decoded);
-// 		// Respond with the appropriate user data
-// 		const user = await knex('users').where({id: decoded.id}).first();
+	console.log(authToken);
+	// create a variable that stores the authorization token
+	// Create a variable to split the auth header and store the second item in the arra
+    // Verify the token
+    try {
+		// Use jwt.verify to verify the token as compared to your JWT_KEY inside of the .env
+        const decoded = jwt.verify(authToken, process.env.JWT_KEY);
+        console.log(decoded);
+		// Respond with the appropriate user data
+		const user = await knex('users').where({id: decoded.id}).first();
 
-// 		console.log(user);
-// 		// Get the user by accessing the users table and retrieving the user by decoded.id
-// 		// dont forget to delete the password before sending back the users info
-// 		delete user.password
-//         res.json(user);
-//     } catch (error) {
-//         return res.status(401).send("Invalid auth token");
-//     }
-// });
+		console.log(user);
+		// Get the user by accessing the users table and retrieving the user by decoded.id
+		// dont forget to delete the password before sending back the users info
+		delete user.password
+        res.json(user);
+    } catch (error) {
+        return res.status(401).send("Invalid auth token");
+    }
+});
 
 
 router.get("/current", authorize, async (req, res) => {
