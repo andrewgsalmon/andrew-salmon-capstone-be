@@ -1,10 +1,11 @@
 const express = require("express");
 const app = express();
+require("dotenv").config();
 // const recosRoutes = require("./routes/recos");
 // const tokenRoutes = require("./routes/spotifyToken.js")
 const userRoutes = require('./routes/userRoutes');
+const commentRoutes = require('./routes/commentRoutes');
 const cors = require("cors");
-require("dotenv").config();
 const PORT = process.env.PORT || 5050;
 const client_id = process.env.CLIENT_ID;
 const client_secret = process.env.CLIENT_SECRET;
@@ -61,6 +62,8 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api/users', userRoutes);
+
+app.use('/api/artists', commentRoutes);
 
 // app.use("/api/recos", recosRoutes);
 
