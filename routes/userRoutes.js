@@ -120,4 +120,25 @@ try{
   }
 });
 
+router.post("/likes", async (req, res) => {
+  const { user_email, artist_name, artist_id, artist_img } = req.body;
+
+  // post a new liked artist record associated to a user
+  const newLike = {
+      user_email,
+      artist_name,
+      artist_id,
+      artist_img
+  };
+
+  // Insert it into our database
+  try {
+      await knex('likes').insert(newLike);
+      res.status(201).send("Liked successfully");
+  } catch (error) {
+      console.error(error);
+      res.status(400).send(req.body);
+  }
+});
+
 module.exports = router;
