@@ -30,7 +30,6 @@ const hashedPassword = bcrypt.hashSync(password)
       await knex('users').insert(newUser);
       res.status(201).send("Registered successfully");
   } catch (error) {
-      console.log(error);
       res.status(400).send(req.body);
   }
 });
@@ -85,18 +84,15 @@ router.get("/current", async (req, res) => {
 	const authHeader = req.headers.authorization;
 	const authToken = authHeader.split(' ')[1];
 
-	console.log(authToken);
 	// create a variable that stores the authorization token
 	// Create a variable to split the auth header and store the second item in the arra
     // Verify the token
     try {
 		// Use jwt.verify to verify the token as compared to your JWT_KEY inside of the .env
         const decoded = jwt.verify(authToken, process.env.JWT_KEY);
-        console.log(decoded);
 		// Respond with the appropriate user data
 		const user = await knex('users').where({id: decoded.id}).first();
 
-		console.log(user);
 		// Get the user by accessing the users table and retrieving the user by decoded.id
 		// dont forget to delete the password before sending back the users info
 		delete user.password
@@ -138,6 +134,18 @@ router.post("/likes", async (req, res) => {
   } catch (error) {
       console.error(error);
       res.status(400).send(req.body);
+  }
+});
+
+router.get("/likes", async (req, res) => {
+  const { user_email } = req.query;
+
+  try {
+      const likes = await knex('likes').where({ user_email }); // Filter comments by artist_id
+
+      res.json(likes);
+  } catch (error) {
+      return res.status(401).send("Invalid request");
   }
 });
 
