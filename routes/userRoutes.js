@@ -44,12 +44,12 @@ router.post("/login", async (req, res) => {
 
   const user = await knex('users').where({ email: email }).first();
   if (!user) {
-    return res.status(400).send("Whoops... no account exists under that email!  Be sure to register above.")
+    return res.status(404).send("Whoops... no account exists under that email!  Be sure to register above.")
   }
 
   const isPasswordCorrect = bcrypt.compareSync(password, user.password)
   if (!isPasswordCorrect) {
-    return res.status(400).send("Incorrect password! Let's try that again...")
+    return res.status(401).send("Incorrect password! Let's try that again...")
   }
 
   const token = jwt.sign(
