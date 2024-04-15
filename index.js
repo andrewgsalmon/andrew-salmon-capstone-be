@@ -1,10 +1,9 @@
 const express = require("express");
 const app = express();
-const recosRoutes = require("./routes/recos");
-const tokenRoutes = require("./routes/spotifyToken.js")
-const userRoutes = require('./routes/userRoutes');
-const cors = require("cors");
 require("dotenv").config();
+const userRoutes = require('./routes/userRoutes');
+const commentRoutes = require('./routes/commentRoutes');
+const cors = require("cors");
 const PORT = process.env.PORT || 5050;
 const client_id = process.env.CLIENT_ID;
 const client_secret = process.env.CLIENT_SECRET;
@@ -12,24 +11,19 @@ const client_url = process.env.CLIENT_URL;
 const passport = require('passport');
 require('./passport')
 const SpotifyStrategy = require('passport-spotify').Strategy;
-const cookieSession = require('cookie-session')
-const { CORS_ORIGIN } = process.env;
+// const { CORS_ORIGIN } = process.env;
 
-app.use(cors({ origin: CORS_ORIGIN }));
+app.use(cors());
 
 app.use(express.json());
 
-// app.use(cookieSession({
-//   name: 'spotify-auth-session',
-//   keys: ['key1', 'key2']
-// }))
-
+//SPOTIFY OAUTH IMPLEMENTATION TBD
 passport.use(
   new SpotifyStrategy(
     {
       clientID: client_id,
       clientSecret: client_secret,
-      callbackURL: 'http://localhost:8080/auth/spotify/callback'
+      callbackURL: `${client_url}/home`
     },
     function(accessToken, refreshToken, expires_in, profile, done) {
       User.findOrCreate({ spotifyId: profile.id }, function(err, user) {
@@ -52,18 +46,12 @@ app.get(
   }
 );
 
-// app.use("/videos", express.static("./public/images"));
-
-// app.use('/spotify', spotifyToken);
-
 app.get('/', (req, res) => {
   res.send('Welcome to my API');
 });
 
-app.use('/users', userRoutes);
+app.use('/api/users', userRoutes);
 
-app.use("/recos", recosRoutes);
-
-app.use("/token", tokenRoutes);
+app.use('/api/artists', commentRoutes);
 
 app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));

@@ -1,12 +1,11 @@
 exports.up = function (knex) {
   return knex.schema
-    .createTable("users", (table) => {
+    .createTable("comments", (table) => {
       table.increments("id").primary();
       table.string("name").notNullable();
-      table.string("email").notNullable().unique();
-      table.string("location");
-      table.string("fav_artists");
-      table.string("password");
+      table.string("email").notNullable();
+      table.string("comment").notNullable().collate("utf8mb4_unicode_ci");
+      table.string("artist_id").notNullable();
       table.timestamp("created_at").defaultTo(knex.fn.now());
       table
         .timestamp("updated_at")
@@ -16,5 +15,5 @@ exports.up = function (knex) {
 
 
 exports.down = function (knex) {
-  return knex.schema.dropTable("users");
+  return knex.schema.dropTable("comments");
 };
