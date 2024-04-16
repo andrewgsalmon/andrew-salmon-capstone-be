@@ -11,9 +11,9 @@ const client_url = process.env.CLIENT_URL;
 const passport = require('passport');
 require('./passport')
 const SpotifyStrategy = require('passport-spotify').Strategy;
-// const { CORS_ORIGIN } = process.env;
+const { CORS_ORIGIN } = process.env;
 
-app.use(cors());
+app.use(cors( CORS_ORIGIN ));
 
 app.use(express.json());
 
