@@ -13,7 +13,7 @@ require('./passport')
 const SpotifyStrategy = require('passport-spotify').Strategy;
 const { CORS_ORIGIN } = process.env;
 
-app.use(cors( CORS_ORIGIN ));
+app.use(cors( {origin: CORS_ORIGIN} ));
 
 app.use(express.json());
 
