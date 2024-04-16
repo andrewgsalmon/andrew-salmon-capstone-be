@@ -15,7 +15,7 @@ const { CORS_ORIGIN } = process.env;
 
 app.use(cors());
 
-app.options('*', cors());
+// app.options('*', cors());
 
 // app.use((req, res, next) => {
 //   res.setHeader('Access-Control-Allow-Origin', CORS_ORIGIN);
