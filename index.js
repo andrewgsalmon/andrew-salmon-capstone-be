@@ -15,6 +15,12 @@ const { CORS_ORIGIN } = process.env;
 
 app.use(cors( { origin: CORS_ORIGIN } ));
 
+app.options('*', cors({
+  origin: CORS_ORIGIN,
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  credentials: true
+}));
+
 app.use(express.json());
 
 //SPOTIFY OAUTH IMPLEMENTATION TBD
