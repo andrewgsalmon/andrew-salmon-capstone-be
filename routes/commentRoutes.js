@@ -7,7 +7,7 @@ router.post("/comment", async (req, res) => {
     const { name, email, comment, artist_id } = req.body;
 
     if (!name || !email || !comment || !artist_id) {
-        return res.status(400).send("Please enter a comment...");
+        return res.status(400).send("Are you new to this? Add a comment before you post!");
     }
 
     // Post a new comment
@@ -21,7 +21,7 @@ router.post("/comment", async (req, res) => {
     // Insert it into our database
     try {
         await knex('comments').insert(newComment);
-        res.status(201).send("Posted successfully");
+        res.status(201).send("Success! Comment posted.");
     } catch (error) {
         console.log(error);
         res.status(400).send(req.body);
