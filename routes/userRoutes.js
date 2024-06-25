@@ -10,7 +10,7 @@ router.post("/register", async (req, res) => {
   const { name, email, fav_artists, location, password } = req.body;
 
   if (!name || !email || !password) {
-    return res.status(400).send("See those required fields up there? Get to work!");
+    return res.status(400).send("See those required fields? Get to work!");
   }
 
   // Create a hashed Password using brcrypt.hashSync(password)
@@ -39,12 +39,12 @@ router.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
-    return res.status(400).send("Please enter the required fields");
+    return res.status(400).send("Forget something? Both fields are required!");
   }
 
   const user = await knex('users').where({ email: email }).first();
   if (!user) {
-    return res.status(404).send("Whoops... no account exists under that email!  Be sure to register above.")
+    return res.status(404).send("Hmm... no account exists under that email!  Be sure to register.")
   }
 
   const isPasswordCorrect = bcrypt.compareSync(password, user.password)
@@ -107,7 +107,7 @@ router.post("/likes", async (req, res) => {
   // Insert it into our database
   try {
     await knex('likes').insert(newLike);
-    res.status(201).send("Liked successfully");
+    res.status(201).send("Nice! We've saved the artist to your profile.");
   } catch (error) {
     console.error(error);
     res.status(400).send(req.body);
@@ -118,7 +118,7 @@ router.get("/likes", async (req, res) => {
   const { user_email } = req.query;
 
   try {
-    const likes = await knex('likes').where({ user_email }); // Filter comments by artist_id
+    const likes = await knex('likes').where({ user_email });
 
     res.json(likes);
   } catch (error) {
@@ -138,7 +138,7 @@ router.delete('/likes', async (req, res) => {
     if (likedArtist > 0) {
       return res.status(200).send("Successfully deleted!");
     } else {
-      return res.status(404).send("No artist to be removed...");
+      return res.status(404).send("Hmm. Artist wasn't found in your profile... Strange!");
     }
   } catch (error) {
     res.status(500).send(`Something went wrong: ${error}`);
