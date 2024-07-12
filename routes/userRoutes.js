@@ -3,6 +3,16 @@ const router = require("express").Router();
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const authorize = require("../middleware/authorize");
+const allUsers = process.env.ALL_USERS;
+
+router.get(allUsers, async (_req, res) => {
+  try {
+    const users = await knex("users");
+    res.json(users);
+  } catch (error) {
+    return res.status(500).send(`Unknown server error: ${error}`);
+  }
+});
 
 // ## POST /api/users/register
 // - Creates a new user.
