@@ -21,6 +21,9 @@ app.options('*', cors({
   credentials: true
 }));
 
+app.use(express.json());
+// test
+
 //SPOTIFY OAUTH IMPLEMENTATION TBD
 passport.use(
   new SpotifyStrategy(
@@ -51,7 +54,7 @@ app.get(
 );
 
 app.get('/api', (req, res) => {
-  res.status(200).send('Welcome to the API of the Hit Me app!');
+  res.send('Welcome to the API of the Hit Me app!');
 });
 
 app.use('/api/users', userRoutes);
