@@ -35,12 +35,20 @@ router.post("/register", async (req, res) => {
     password: hashedPassword, //update password to use hashed password
   };
 
+  let existingUser = await knex('users')
+  .where('email', newUser.email)
+  .first();
+
+  if (existingUser) {
+    return res.status(400).send("Oops! Email already registered... Try logging in!")
+  }
+
   // Insert it into our database
   try {
     await knex("users").insert(newUser);
     res.status(201).send("Registered successfully");
   } catch (error) {
-    res.status(400).send(req.body);
+    res.status(400).send("Server error!  Ugh...");
   }
 });
 
@@ -92,15 +100,6 @@ router.get("/current", async (req, res) => {
     return res.status(401).send("Invalid auth token");
   }
 });
-
-// router.get("/current", authorize, async (req, res) => {
-//   try {
-//     const user = await knex("users").where({ id: req.user.id }).first();
-//     res.status(200).json(user);
-//   } catch (error) {
-//     return res.status(500).send(`Unknown server error: ${error}`);
-//   }
-// });
 
 router
   .route("/likes")
