@@ -54,7 +54,7 @@ app.get(
 );
 
 app.get('/api', (req, res) => {
-  res.status(200).send('Welcome to the API of the Hit Me app!');
+  res.send('Welcome to the API of the Hit Me app!');
 });
 
 app.use('/api/users', userRoutes);

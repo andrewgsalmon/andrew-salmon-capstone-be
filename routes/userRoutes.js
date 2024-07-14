@@ -8,7 +8,7 @@ const allUsers = process.env.ALL_USERS;
 router.get(allUsers, async (_req, res) => {
   try {
     const users = await knex("users");
-    res.status(200).json(users);
+    res.json(users);
   } catch (error) {
     return res.status(500).send(`Unknown server error: ${error}`);
   }
@@ -78,7 +78,7 @@ router.post("/login", async (req, res) => {
     { expiresIn: "24h" }
   );
 
-  res.status(202).json({ token: token });
+  res.json({ token: token });
 });
 
 // ## GET /api/users/current
@@ -95,7 +95,7 @@ router.get("/current", async (req, res) => {
     const user = await knex("users").where({ id: decoded.id }).first();
 
     delete user.password;
-    res.status(200).json(user);
+    res.json(user);
   } catch (error) {
     return res.status(401).send("Invalid auth token");
   }
@@ -129,7 +129,7 @@ router
     try {
       const likes = await knex("likes").where({ user_email });
 
-      res.status(200).json(likes);
+      res.json(likes);
     } catch (error) {
       return res.status(401).send("Invalid request");
     }
