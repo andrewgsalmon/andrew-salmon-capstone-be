@@ -93,15 +93,6 @@ router.get("/current", async (req, res) => {
   }
 });
 
-router.get("/current", authorize, async (req, res) => {
-  try {
-    const user = await knex("users").where({ id: req.user.id }).first();
-    res.json(user);
-  } catch (error) {
-    return res.status(500).send(`Unknown server error: ${error}`);
-  }
-});
-
 router
   .route("/likes")
   .post(async (req, res) => {
