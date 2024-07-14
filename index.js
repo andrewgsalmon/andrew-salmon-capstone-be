@@ -21,6 +21,9 @@ app.options('*', cors({
   credentials: true
 }));
 
+app.use(express.json());
+// test
+
 //SPOTIFY OAUTH IMPLEMENTATION TBD
 passport.use(
   new SpotifyStrategy(

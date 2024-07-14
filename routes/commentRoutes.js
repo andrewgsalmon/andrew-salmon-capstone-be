@@ -35,7 +35,7 @@ router.get("/comments/:artist_id", async (req, res) => {
     try {
         const comments = await knex('comments').where({ artist_id }); // Filter comments by artist_id
 
-        res.status(200).json(comments);
+        res.json(comments);
     } catch (error) {
         return res.status(401).send("Invalid request");
     }
