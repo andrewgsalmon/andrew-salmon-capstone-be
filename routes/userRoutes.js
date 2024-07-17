@@ -104,7 +104,7 @@ router.get("/current", async (req, res) => {
 router
   .route("/likes")
   .post(async (req, res) => {
-    const { user_email, artist_name, artist_id, artist_img } = req.body;
+    const { user_email, artist_name, artist_id, artist_img, artist_genre } = req.body;
 
     // post a new liked artist record associated to a user
     const newLike = {
@@ -112,6 +112,7 @@ router
       artist_name,
       artist_id,
       artist_img,
+      artist_genre
     };
 
     // Insert it into our database
