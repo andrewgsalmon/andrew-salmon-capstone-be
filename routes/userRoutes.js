@@ -2,20 +2,54 @@ const knex = require("knex")(require("../knexfile"));
 const router = require("express").Router();
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+
 const authorize = require("../middleware/authorize");
 const allUsers = process.env.ALL_USERS;
 
-router.get(allUsers, async (_req, res) => {
+const multer = require("multer");
+const crypto = require("crypto");
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
+
+const { S3Client, PutObjectCommand, GetObjectCommand } = require("@aws-sdk/client-s3");
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
+const bucketName = process.env.BUCKET_NAME;
+const bucketRegion = process.env.BUCKET_REGION;
+const accessKey = process.env.ACCESS_KEY;
+const secretAccessKey = process.env.SECRET_ACCESS_KEY;
+
+const dotenv = require("dotenv");
+dotenv.config();
+
+const randomImageName = (bytes = 32) =>
+  crypto.randomBytes(bytes).toString("hex");
+
+const s3 = new S3Client({
+  credentials: {
+    accessKeyId: accessKey,
+    secretAccessKey: secretAccessKey,
+  },
+  region: bucketRegion,
+});
+
+router.get("/profile-img", async (req, res) => {
+  const { email } = req.query;
+  const user = await knex("users").where({email: email}).first();
+
+  const getObjectParams = {
+    Bucket: bucketName,
+    Key: user.profile_img,
+  }
+  const command = new GetObjectCommand(getObjectParams);
+  const profileImageUrl = await getSignedUrl(s3, command, { expiresIn: 3600 });
+
   try {
-    const users = await knex("users");
-    res.json(users);
+    res.send(profileImageUrl);
   } catch (error) {
     return res.status(500).send(`Unknown server error: ${error}`);
   }
 });
 
-// ## POST /api/users/register
-// - Creates a new user.
 router.post("/register", async (req, res) => {
   const { name, email, fav_artists, location, password } = req.body;
 
@@ -23,32 +57,57 @@ router.post("/register", async (req, res) => {
     return res.status(400).send("See those required fields? Get to work!");
   }
 
-  // Create a hashed Password using brcrypt.hashSync(password)
   const hashedPassword = bcrypt.hashSync(password);
 
-  // Create the new user
   const newUser = {
     name,
     fav_artists,
     location,
     email,
-    password: hashedPassword, //update password to use hashed password
+    password: hashedPassword,
   };
 
-  let existingUser = await knex('users')
-  .where('email', newUser.email)
-  .first();
+  let existingUser = await knex("users").where("email", newUser.email).first();
 
   if (existingUser) {
-    return res.status(400).send("Oops! Email already registered... Try logging in!")
+    return res
+      .status(400)
+      .send("Oops! Email already registered... Try logging in!");
   }
 
-  // Insert it into our database
   try {
     await knex("users").insert(newUser);
     res.status(201).send("Registered successfully");
   } catch (error) {
     res.status(400).send("Server error!  Ugh...");
+  }
+});
+
+router.post("/profile-img", upload.single("avatar"), async (req, res) => {
+  const { user_email } = req.body;
+  req.file.buffer;
+
+  const imageName = randomImageName();
+  const params = {
+    Bucket: bucketName,
+    Key: imageName,
+    Body: req.file.buffer,
+    ContentType: req.file.mimetype,
+  };
+
+  const command = new PutObjectCommand(params);
+
+  await s3.send(command);
+
+  try {
+    await knex("users")
+      .where({ email: user_email })
+      .update({ profile_img: imageName });
+
+    res.status(202).send({ message: "Profile image updated successfully" });
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).send("An error occurred");
   }
 });
 
@@ -90,12 +149,27 @@ router.get("/current", async (req, res) => {
   const authHeader = req.headers.authorization;
   const authToken = authHeader.split(" ")[1];
 
+  const decoded = jwt.verify(authToken, process.env.JWT_KEY);
+  const user = await knex("users").where({ id: decoded.id }).first();
   try {
-    const decoded = jwt.verify(authToken, process.env.JWT_KEY);
-    const user = await knex("users").where({ id: decoded.id }).first();
+    const getObjectParams = {
+      Bucket: bucketName,
+      Key: user.profile_img,
+    }
+    const command = new GetObjectCommand(getObjectParams);
+    const profileImageUrl = await getSignedUrl(s3, command, { expiresIn: 3600 });
+
+    const completeUser = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      location: user.location,
+      fav_artists: user.fav_artists,
+      profile_img: profileImageUrl
+    }
 
     delete user.password;
-    res.json(user);
+    res.json(completeUser);
   } catch (error) {
     return res.status(401).send("Invalid auth token");
   }
@@ -104,18 +178,17 @@ router.get("/current", async (req, res) => {
 router
   .route("/likes")
   .post(async (req, res) => {
-    const { user_email, artist_name, artist_id, artist_img, artist_genre } = req.body;
+    const { user_email, artist_name, artist_id, artist_img, artist_genre } =
+      req.body;
 
-    // post a new liked artist record associated to a user
     const newLike = {
       user_email,
       artist_name,
       artist_id,
       artist_img,
-      artist_genre
+      artist_genre,
     };
 
-    // Insert it into our database
     try {
       await knex("likes").insert(newLike);
       res.status(201).send("Nice! We've saved the artist to your profile.");
