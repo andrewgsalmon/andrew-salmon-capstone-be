@@ -115,29 +115,37 @@ router.post("/profile-img", upload.single("avatar"), async (req, res) => {
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
-  if (!email || !password) {
-    return res.status(400).send("Forget something? Both fields are required!");
-  }
+  // if (!email || !password) {
+  //   return res.status(400).send("Forget something? Both fields are required!");
+  // }
 
-  const user = await knex("users").where({ email: email }).first();
-  if (!user) {
-    return res
+
+  try {
+    const user = await knex("users").where({ email: email }).first();
+
+    if (!user) {
+      return res
       .status(404)
       .send("Hmm... no account exists under that email!  Be sure to register.");
+    }
+
+    const isPasswordCorrect = bcrypt.compareSync(password, user.password);
+
+    if (!isPasswordCorrect) {
+      return res.status(401).send("Incorrect password! Let's try that again...");
+    }
+
+    const token = jwt.sign(
+      { id: user.id, email: user.email },
+      process.env.JWT_KEY,
+      { expiresIn: "24h" }
+    );
+    res.json({ token: token });
   }
 
-  const isPasswordCorrect = bcrypt.compareSync(password, user.password);
-  if (!isPasswordCorrect) {
-    return res.status(401).send("Incorrect password! Let's try that again...");
+  catch (error) {
+    return res.status(500).send(`Something went wrong: ${error.message}`);
   }
-
-  const token = jwt.sign(
-    { id: user.id, email: user.email },
-    process.env.JWT_KEY,
-    { expiresIn: "24h" }
-  );
-
-  res.json({ token: token });
 });
 
 // ## GET /api/users/current
