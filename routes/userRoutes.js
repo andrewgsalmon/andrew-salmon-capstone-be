@@ -11,7 +11,11 @@ const crypto = require("crypto");
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-const { S3Client, PutObjectCommand, GetObjectCommand } = require("@aws-sdk/client-s3");
+const {
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+} = require("@aws-sdk/client-s3");
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 const bucketName = process.env.BUCKET_NAME;
 const bucketRegion = process.env.BUCKET_REGION;
@@ -30,24 +34,6 @@ const s3 = new S3Client({
     secretAccessKey: secretAccessKey,
   },
   region: bucketRegion,
-});
-
-router.get("/profile-img", async (req, res) => {
-  const { email } = req.query;
-  const user = await knex("users").where({email: email}).first();
-
-  const getObjectParams = {
-    Bucket: bucketName,
-    Key: user.profile_img,
-  }
-  const command = new GetObjectCommand(getObjectParams);
-  const profileImageUrl = await getSignedUrl(s3, command, { expiresIn: 3600 });
-
-  try {
-    res.send(profileImageUrl);
-  } catch (error) {
-    return res.status(500).send(`Unknown server error: ${error}`);
-  }
 });
 
 router.post("/register", async (req, res) => {
@@ -83,56 +69,25 @@ router.post("/register", async (req, res) => {
   }
 });
 
-router.post("/profile-img", upload.single("avatar"), async (req, res) => {
-  const { user_email } = req.body;
-  req.file.buffer;
-
-  const imageName = randomImageName();
-  const params = {
-    Bucket: bucketName,
-    Key: imageName,
-    Body: req.file.buffer,
-    ContentType: req.file.mimetype,
-  };
-
-  const command = new PutObjectCommand(params);
-
-  await s3.send(command);
-
-  try {
-    await knex("users")
-      .where({ email: user_email })
-      .update({ profile_img: imageName });
-
-    res.status(202).send({ message: "Profile image updated successfully" });
-  } catch (error) {
-    console.error("Error:", error);
-    res.status(500).send("An error occurred");
-  }
-});
-
-// ## POST /api/users/login
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
-  // if (!email || !password) {
-  //   return res.status(400).send("Forget something? Both fields are required!");
-  // }
-
-
   try {
     const user = await knex("users").where({ email: email }).first();
+    const isPasswordCorrect = bcrypt.compareSync(password, user.password);
 
     if (!user) {
       return res
-      .status(404)
-      .send("Hmm... no account exists under that email!  Be sure to register.");
+        .status(404)
+        .send(
+          "Hmm... no account exists under that email!  Be sure to register."
+        );
     }
 
-    const isPasswordCorrect = bcrypt.compareSync(password, user.password);
-
     if (!isPasswordCorrect) {
-      return res.status(401).send("Incorrect password! Let's try that again...");
+      return res
+        .status(401)
+        .send("Incorrect password! Let's try that again...");
     }
 
     const token = jwt.sign(
@@ -141,12 +96,63 @@ router.post("/login", async (req, res) => {
       { expiresIn: "24h" }
     );
     res.json({ token: token });
-  }
-
-  catch (error) {
+  } catch (error) {
     return res.status(500).send(`Something went wrong: ${error.message}`);
   }
 });
+
+router
+  .route("/profile-img")
+  .post(upload.single("avatar"), async (req, res) => {
+    if (!req.file) {
+      return res.status(400).send("Whoops! You gotta send an image there...");
+    }
+
+    const { user_email } = req.body;
+    req.file.buffer;
+
+    const imageName = randomImageName();
+    const params = {
+      Bucket: bucketName,
+      Key: imageName,
+      Body: req.file.buffer,
+      ContentType: req.file.mimetype,
+    };
+
+    const command = new PutObjectCommand(params);
+
+    await s3.send(command);
+
+    try {
+      await knex("users")
+        .where({ email: user_email })
+        .update({ profile_img: imageName });
+
+      res.status(202).send({ message: "Profile image updated successfully" });
+    } catch (error) {
+      console.error("Error:", error);
+      res.status(500).send("An error occurred");
+    }
+  })
+  .get(async (req, res) => {
+    const { email } = req.query;
+    const user = await knex("users").where({ email: email }).first();
+
+    const getObjectParams = {
+      Bucket: bucketName,
+      Key: user.profile_img,
+    };
+    const command = new GetObjectCommand(getObjectParams);
+    const profileImageUrl = await getSignedUrl(s3, command, {
+      expiresIn: 3600,
+    });
+
+    try {
+      res.send(profileImageUrl);
+    } catch (error) {
+      return res.status(500).send(`Unknown server error: ${error}`);
+    }
+  });
 
 // ## GET /api/users/current
 router.get("/current", async (req, res) => {
@@ -157,15 +163,27 @@ router.get("/current", async (req, res) => {
   const authHeader = req.headers.authorization;
   const authToken = authHeader.split(" ")[1];
 
-  const decoded = jwt.verify(authToken, process.env.JWT_KEY);
-  const user = await knex("users").where({ id: decoded.id }).first();
+  let decoded;
+
   try {
+    decoded = jwt.verify(authToken, process.env.JWT_KEY);
+  } catch (error) {
+    if (error.name === "TokenExpiredError") {
+      return res.status(401).send("Token expired. Please login again.");
+    }
+    return res.status(401).send("Invalid auth token");
+  }
+
+  try {
+    const user = await knex("users").where({ id: decoded.id }).first();
     const getObjectParams = {
       Bucket: bucketName,
       Key: user.profile_img,
-    }
+    };
     const command = new GetObjectCommand(getObjectParams);
-    const profileImageUrl = await getSignedUrl(s3, command, { expiresIn: 3600 });
+    const profileImageUrl = await getSignedUrl(s3, command, {
+      expiresIn: 3600,
+    });
 
     const completeUser = {
       id: user.id,
@@ -173,8 +191,8 @@ router.get("/current", async (req, res) => {
       email: user.email,
       location: user.location,
       fav_artists: user.fav_artists,
-      profile_img: profileImageUrl
-    }
+      profile_img: profileImageUrl,
+    };
 
     delete user.password;
     res.json(completeUser);
