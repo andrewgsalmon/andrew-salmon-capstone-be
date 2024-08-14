@@ -74,15 +74,16 @@ router.post("/login", async (req, res) => {
 
   try {
     const user = await knex("users").where({ email: email }).first();
-    const isPasswordCorrect = bcrypt.compareSync(password, user.password);
 
     if (!user) {
       return res
-        .status(404)
-        .send(
-          "Hmm... no account exists under that email!  Be sure to register."
-        );
+      .status(404)
+      .send(
+        "Hmm... no account exists under that email!  Be sure to register."
+      );
     }
+
+    const isPasswordCorrect = bcrypt.compare(password, user.password);
 
     if (!isPasswordCorrect) {
       return res
@@ -97,6 +98,7 @@ router.post("/login", async (req, res) => {
     );
     res.json({ token: token });
   } catch (error) {
+    console.error(`Login error: ${error.message}`);
     return res.status(500).send(`Something went wrong: ${error.message}`);
   }
 });
