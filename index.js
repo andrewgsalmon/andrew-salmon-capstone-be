@@ -3,6 +3,7 @@ const app = express();
 require("dotenv").config();
 const userRoutes = require('./routes/userRoutes');
 const commentRoutes = require('./routes/commentRoutes');
+const spotifyRoutes = require('./routes/spotifyRoutes');
 const cors = require("cors");
 const PORT = process.env.PORT || 5050;
 const client_id = process.env.CLIENT_ID;
@@ -22,7 +23,6 @@ app.options('*', cors({
 }));
 
 app.use(express.json());
-// test
 
 //SPOTIFY OAUTH IMPLEMENTATION TBD
 passport.use(
@@ -60,5 +60,7 @@ app.get('/api', (req, res) => {
 app.use('/api/users', userRoutes);
 
 app.use('/api/artists', commentRoutes);
+
+app.use('/api/spotify', spotifyRoutes);
 
 app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
