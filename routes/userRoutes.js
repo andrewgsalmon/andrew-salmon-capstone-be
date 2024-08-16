@@ -156,7 +156,6 @@ router
     }
   });
 
-// ## GET /api/users/current
 router.get("/current", async (req, res) => {
   if (!req.headers.authorization) {
     return res.status(401).send("Please login");

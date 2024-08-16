@@ -1,18 +1,25 @@
 const express = require("express");
 const app = express();
 require("dotenv").config();
+const passport = require('passport');
+const jwt = require('jsonwebtoken');
+require('./middleware/passport')
+const cors = require("cors");
 const userRoutes = require('./routes/userRoutes');
 const commentRoutes = require('./routes/commentRoutes');
 // const spotifyRoutes = require('./routes/spotifyRoutes');
-const cors = require("cors");
-const PORT = process.env.PORT || 5050;
 // const client_id = process.env.CLIENT_ID;
 // const client_secret = process.env.CLIENT_SECRET;
 // const client_url = process.env.CLIENT_URL;
-// const passport = require('passport');
-require('./passport')
 // const SpotifyStrategy = require('passport-spotify').Strategy;
-const { CORS_ORIGIN } = process.env;
+const PORT = process.env.PORT || 5050;
+const { CORS_ORIGIN, CLIENT_URL, JWT_KEY } = process.env;
+
+const isLoggedIn = (req, res, next) => {
+  req.user ? next() : res.sendStatus(401);
+}
+
+app.use(express.json());
 
 app.use(cors( { origin: CORS_ORIGIN } ));
 
@@ -22,35 +29,31 @@ app.options('*', cors({
   credentials: true
 }));
 
-app.use(express.json());
+app.use(passport.initialize());
 
-//SPOTIFY OAUTH IMPLEMENTATION TBD
-// passport.use(
-//   new SpotifyStrategy(
-//     {
-//       clientID: client_id,
-//       clientSecret: client_secret,
-//       callbackURL: `${client_url}/home`
-//     },
-//     function(accessToken, refreshToken, expires_in, profile, done) {
-//       User.findOrCreate({ spotifyId: profile.id }, function(err, user) {
-//         return done(err, user);
-//       });
-//     }
-//   )
-// );
+app.get('/auth/google',
+  passport.authenticate('google', { scope:
+      [ 'email', 'profile' ] }
+));
 
-// app.get('/auth/spotify', passport.authenticate('spotify', {
-//   scope: ['user-read-email', 'user-read-private']
-// }));
+app.get('/auth/google/callback',
+    passport.authenticate('google', {
+        session: false,
+        failureRedirect: '/auth/google/failure'
+  }),
+  (req, res) => {
+    const token = jwt.sign(
+      { id: req.user.id, email: req.user.email },
+      JWT_KEY,
+      { expiresIn: "24h" }
+    );
+    res.redirect(`${CLIENT_URL}/login?token=${token}`);
+  }
+);
 
-// app.get(
-//   '/auth/spotify/callback',
-//   passport.authenticate('spotify', { failureRedirect: '/login' }),
-//   function(req, res) {
-//     res.redirect(`${client_url}/home`);
-//   }
-// );
+app.get('/auth/google/failure', (req, res) => {
+  res.send('Something went wrong!')
+})
 
 app.get('/api', (req, res) => {
   res.send('Welcome to the API of the Hit Me app!');
