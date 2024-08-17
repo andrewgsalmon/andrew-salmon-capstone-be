@@ -218,7 +218,7 @@ router
 
     try {
       await knex("likes").insert(newLike);
-      res.status(201).send(`Nice! We've saved ${newLike.artist_name} to your profile.`);
+      res.status(201).send("Nice! We've saved the artist to your profile.");
     } catch (error) {
       console.error(error);
       res.status(400).send(req.body);
