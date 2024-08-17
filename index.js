@@ -15,9 +15,9 @@ const commentRoutes = require('./routes/commentRoutes');
 const PORT = process.env.PORT || 5050;
 const { CORS_ORIGIN, CLIENT_URL, JWT_KEY } = process.env;
 
-const isLoggedIn = (req, res, next) => {
-  req.user ? next() : res.sendStatus(401);
-}
+// const isLoggedIn = (req, res, next) => {
+//   req.user ? next() : res.sendStatus(401);
+// }
 
 app.use(express.json());
 
