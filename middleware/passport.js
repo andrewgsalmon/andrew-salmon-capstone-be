@@ -27,11 +27,10 @@ passport.use(
           const newUser = {
             email: profile.emails[0].value,
             name: profile.name.givenName,
+            auth_provider: 'Google'
           };
 
-          const createdUser = (
-            await knex("users").insert(newUser).returning("*")
-          )[0];
+          await knex("users").insert(newUser);
 
           const confirmedUser = await knex("users")
           .where({ email: newUser.email })
