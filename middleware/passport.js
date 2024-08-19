@@ -22,19 +22,24 @@ passport.use(
           .first();
 
         if (user) {
+          if (user.auth_provider !== "Google") {
+            await knex("users")
+              .where({ email: profile.emails[0].value })
+              .update({ auth_provider: "Google" });
+          }
           return done(null, user);
         } else {
           const newUser = {
             email: profile.emails[0].value,
             name: profile.name.givenName,
-            auth_provider: 'Google'
+            auth_provider: "Google",
           };
 
           await knex("users").insert(newUser);
 
           const confirmedUser = await knex("users")
-          .where({ email: newUser.email })
-          .first();
+            .where({ email: newUser.email })
+            .first();
 
           return done(null, confirmedUser);
         }
