@@ -6,11 +6,6 @@ const cors = require("cors");
 const userRoutes = require('./routes/userRoutes');
 const commentRoutes = require('./routes/commentRoutes');
 const authRoutes = require('./routes/authRoutes');
-// const spotifyRoutes = require('./routes/spotifyRoutes');
-// const client_id = process.env.CLIENT_ID;
-// const client_secret = process.env.CLIENT_SECRET;
-// const client_url = process.env.CLIENT_URL;
-// const SpotifyStrategy = require('passport-spotify').Strategy;
 const PORT = process.env.PORT || 5050;
 const { CORS_ORIGIN } = process.env;
 
@@ -34,6 +29,4 @@ app.use('/api/users', userRoutes);
 
 app.use('/api/artists', commentRoutes);
 
-// app.use('/api/spotify', spotifyRoutes);
-
-app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
+app.listen(PORT, '0.0.0.0', () => console.log(`Server listening on port ${PORT}`));
