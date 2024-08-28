@@ -1,0 +1,57 @@
+services:
+  web:
+    build: .
+    environment:
+      PORT: '4000'
+      CLIENT_ID: ${CLIENT_ID}
+      CLIENT_SECRET: ${CLIENT_SECRET}
+      CLIENT_URL: ${CLIENT_URL}
+      CORS_ORIGIN: ${CORS_ORIGIN}
+      SERVER_URL: ${SERVER_URL}
+      JWT_KEY: ${JWT_KEY}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      BUCKET_NAME: ${BUCKET_NAME}
+      BUCKET_REGION: ${BUCKET_REGION}
+      ACCESS_KEY: ${ACCESS_KEY}
+      SECRET_ACCESS_KEY: ${SECRET_ACCESS_KEY}
+    ports:
+      - "8080:4000"
+    volumes:
+      - hitme-server-contents:/usr/src/app
+    networks:
+      - webnet
+
+  client:
+    image: hitme-client:latest
+    environment:
+      REACT_APP_CLIENT_ID: ${REACT_APP_CLIENT_ID}
+      REACT_APP_CLIENT_SECRET: ${REACT_APP_CLIENT_SECRET}
+      REACT_APP_BASE_URL: ${REACT_APP_BASE_URL}
+      USERNAME: ${USERNAME}
+      PASSWORD: ${PASSWORD}
+    ports:
+      - "3000:3000"
+    volumes:
+      - hitme-client-contents:/usr/src/app
+    networks:
+      - webnet
+
+  db:
+    image: mysql:9.0.1
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: hit_me
+
+    volumes:
+      - db-data:/var/lib/mysql
+    networks:
+      - webnet
+
+volumes:
+  hitme-client-contents:
+  hitme-server-contents:
+  db-data:
+
+networks:
+  webnet:
