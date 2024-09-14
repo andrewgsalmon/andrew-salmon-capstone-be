@@ -87,7 +87,7 @@ router.post("/login", async (req, res) => {
       return res.status(401).send(`Whoops! Looks like you registered via ${user.auth_provider}. Login via the provider below.`)
     }
 
-    const isPasswordCorrect = bcrypt.compare(password, user.password);
+    const isPasswordCorrect = await bcrypt.compare(password, user.password);
 
     if (!isPasswordCorrect) {
       return res
